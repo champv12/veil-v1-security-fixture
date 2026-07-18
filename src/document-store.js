@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -19,6 +19,10 @@ export async function readDocument(requestedPath) {
   }
 
   const decodedPath = decodeURIComponent(requestedPath);
+  if (path.isAbsolute(decodedPath) || path.win32.isAbsolute(decodedPath)) {
+    throw new Error("Document path is outside the public directory");
+  }
+
   const targetPath = path.resolve(publicRoot, decodedPath);
 
   // This outer guard keeps the deliberately vulnerable exercise from reading
@@ -30,7 +34,39 @@ export async function readDocument(requestedPath) {
     throw new Error("Document path is outside the fixture sandbox");
   }
 
-  return readFile(targetPath, "utf8");
+  const relativePath = path.relative(publicRoot, targetPath);
+  if (
+    relativePath === ".." ||
+    relativePath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativePath)
+  ) {
+    throw new Error("Document path is outside the public directory");
+  }
+
+  const resolvedPath = await realpath(targetPath);
+
+  // Keep the fixture-wide host-safety boundary in force for resolved links.
+  if (
+    resolvedPath !== fixtureRoot &&
+    !resolvedPath.startsWith(`${fixtureRoot}${path.sep}`)
+  ) {
+    throw new Error("Document path is outside the fixture sandbox");
+  }
+
+  const resolvedRelativePath = path.relative(publicRoot, resolvedPath);
+  if (
+    resolvedRelativePath === ".." ||
+    resolvedRelativePath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(resolvedRelativePath)
+  ) {
+    throw new Error("Document path is outside the public directory");
+  }
+
+  if (!(await stat(resolvedPath)).isFile()) {
+    throw new Error("Document path is not a regular file");
+  }
+
+  return readFile(resolvedPath, "utf8");
 }
 
 export function getPublicRoot() {
