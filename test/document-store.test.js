@@ -26,3 +26,21 @@ test("reports a missing public document", async () => {
     code: "ENOENT",
   });
 });
+
+for (const requestedPath of [
+  "../restricted/decoy-record.txt",
+  "%2e%2e%2frestricted%2fdecoy-record.txt",
+  "../public-safe/decoy-record.txt",
+  "/etc/passwd",
+  "C:\\Windows\\win.ini",
+]) {
+  test(`rejects unauthorized path: ${requestedPath}`, async () => {
+    await assert.rejects(() => readDocument(requestedPath));
+  });
+}
+
+test("rejects a directory instead of reading it as a document", async () => {
+  await assert.rejects(() => readDocument("guides"), {
+    message: "Document path is not a regular file",
+  });
+});
