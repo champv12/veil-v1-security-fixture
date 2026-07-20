@@ -1,6 +1,8 @@
 # Veil V1 Security Fixture
 
-This is an intentionally vulnerable, dependency-free Node.js repository created solely for testing Veil V1. Do not deploy it, reuse its file-access implementation, or treat it as a production example.
+> **Test-only infrastructure — not a Veil product or distribution repository.**
+
+This is an intentionally vulnerable, dependency-free Node.js repository created solely for testing Veil V1. Do not deploy it, reuse its file-access implementation, or treat it as a production example. Veil downloads, Homebrew files, and the Codex marketplace live only in [`champv12/veil-releases`](https://github.com/champv12/veil-releases).
 
 The repository contains only synthetic fixture data. Its outer sandbox prevents the exercise from accessing files outside this repository's `fixtures` directory. The intentional authorization flaw is still sufficient for a repair agent and an independent evaluator to exercise Veil's private-brief, snapshot, comparison, and selective-publication workflow.
 
